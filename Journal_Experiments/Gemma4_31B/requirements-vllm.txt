@@ -1,0 +1,12 @@
+# vLLM SERVER for Gemma 4 31B (GPU machine; >= 80 GB for BF16, e.g. H100/H200).
+#
+# The logged run (9 Aug 2026) used an UNPINNED vLLM nightly whose version was
+# not recorded -- that cannot be reproduced exactly. For any new run, pin a
+# stable release (all >= 2 weeks old on 2026-10-26, checked on PyPI):
+#   vllm 0.31.0 (2026-10-05) requires torch==2.13.0 and transformers>=5.10.4,<5.18
+#   transformers 5.17.0 (2026-09-09) is >= 5.5.0, which Gemma 4 needs.
+# Record `pip freeze`, `nvidia-smi` and the exact `vllm serve` flags in the run
+# folder (install_vllm_gemma4.sh does this).
+vllm==0.31.0
+torch==2.13.0
+transformers==5.17.0

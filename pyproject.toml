@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "catsec"
+version = "1.1.0.dev0"
+description = "CATSEC: Categorical Control-Flow Isolation for Prompt-Injection-Resilient LLM Agents (kernel, planner, contracts)"
+requires-python = ">=3.10"
+# Exact versions: requirements.txt (direct) and requirements-lock.txt (all).
+dependencies = ["agentdojo==0.1.35"]
+
+[tool.setuptools]
+packages = ["catsec", "catsec.prompts"]
+
+[tool.setuptools.package-data]
+"catsec.prompts" = ["*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

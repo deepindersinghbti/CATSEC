@@ -1,6 +1,10 @@
-# Python 3.12. agentdojo, pydantic, pandas, scipy and the provider SDKs are the
-# versions recorded in the run manifests (Journal_Experiments/*/runs/*.manifest.json);
-# matplotlib and python-dotenv are the versions the offline checks were run with.
+# Python 3.12 (3.12.3 used). Direct dependencies, pinned. agentdojo, pydantic,
+# pandas, scipy and the provider SDKs are the versions recorded in the run
+# manifests (Journal_Experiments/*/runs/*.manifest.json) of the GPT, Claude and
+# Gemini runs; matplotlib, python-dotenv, tqdm and pytest are the versions the
+# offline checks were run with. requirements-lock.txt pins EVERY transitive
+# package. The Gemma run used a different client environment (Python 3.10.20):
+# see Journal_Experiments/Gemma4_31B/requirements.txt.
 agentdojo==0.1.35
 pydantic==2.13.4
 pandas==3.0.3
@@ -10,5 +14,7 @@ anthropic==0.120.0
 google-genai==2.12.1
 python-dotenv==1.2.4
 matplotlib==3.11.2
+tqdm==4.70.1
+pytest==8.4.2
 # The Gemma 4 31B server (vLLM) is installed separately on the GPU machine:
-# see Journal_Experiments/Gemma4_31B/install_vllm_gemma4.sh
+# see Journal_Experiments/Gemma4_31B/requirements-vllm.txt

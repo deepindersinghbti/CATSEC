@@ -1,3 +1,10 @@
+> **Revision 2026-10:** `kernel.py`, `planner.py`, `selftest.py`, `analyze.py` and
+> `check_composer_prompt.py` no longer live in this folder. The defence is the
+> shared `catsec/` package at the repository root; use
+> `python ../../tests/selftest.py`, `python ../../tools/check_composer_prompt.py`
+> and `python ../../analysis/analyze.py --jsonl runs/<log>.jsonl`. The text below
+> describes the original setup.
+
 # Gemini leg via Google AI Studio — run order
 
 `kernel.py`, `planner.py`, `analyze.py`, `selftest.py` are **unchanged**. Only

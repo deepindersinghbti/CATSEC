@@ -1,3 +1,2 @@
-agentdojo==0.1.35
-python-dotenv
-matplotlib>=3.7
+# The E1-E7 experiments use the repository-level environment:
+-r ../requirements.txt

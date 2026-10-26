@@ -1,3 +1,10 @@
+> **Revision 2026-10:** `kernel.py`, `planner.py`, `selftest.py`, `analyze.py` and
+> `check_composer_prompt.py` no longer live in this folder. The defence is the
+> shared `catsec/` package at the repository root; use
+> `python ../../tests/selftest.py`, `python ../../tools/check_composer_prompt.py`
+> and `python ../../analysis/analyze.py --jsonl runs/<log>.jsonl`. The text below
+> describes the original setup.
+
 # CATSEC — Gemma 4 leg (self-hosted, rented GPU)
 
 The open-weight leg of the model comparison. Serves Gemma 4 yourself with vLLM

@@ -1,0 +1,31 @@
+LICENSE -- DECISION NEEDED (repository owner: Deepinder Singh)
+=============================================================
+
+This repository currently has NO licence, which legally means "all rights
+reserved": reviewers and artifact evaluators may read it but nobody may reuse,
+modify or redistribute it. IEEE TDSC reviewers and ACM/USENIX artifact
+evaluation expect an OSI-approved licence and an archived, citable release.
+Only the copyright holder(s) can choose; this file is a placeholder so that
+the choice is not forgotten. Rename it to LICENSE once decided.
+
+Options (both permissive, both accepted everywhere):
+
+1. MIT
+   + shortest, most familiar; maximal reuse.
+   - no explicit patent grant; no NOTICE requirement.
+   Text: https://opensource.org/license/mit
+
+2. Apache License 2.0   (suggested by the pre-submission review)
+   + explicit patent licence and patent-retaliation clause -- relevant for a
+     security mechanism that someone might later try to patent around;
+   + NOTICE file lets you require attribution of the paper.
+   - longer; changed files must carry a modification notice.
+   Text: https://www.apache.org/licenses/LICENSE-2.0.txt
+
+Either way, also:
+- add a copyright line naming all authors / institutions (check each
+  institution's IP policy before release);
+- data: the JSONL logs contain AgentDojo task text (AgentDojo is MIT-licensed);
+  keep its copyright notice if redistributing the suite text;
+- add CITATION.cff and archive the tagged release on Zenodo (DOI), then cite
+  the DOI in the paper's "Artifact availability" paragraph.

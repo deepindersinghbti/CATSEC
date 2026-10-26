@@ -15,15 +15,18 @@ pip install -U uv
 nvidia-smi --query-gpu=driver_version --format=csv,noheader
 nvcc --version 2>/dev/null || echo "nvcc not on PATH — check the template's CUDA docs instead"
 
-# 3. vLLM nightly (pre-release) + a matching torch build for that CUDA.
-#    cu129 below assumes CUDA 12.9 on the instance — if step 2 shows a
-#    different major version, swap cu129 for e.g. cu121 / cu124 in BOTH
-#    --extra-index-url lines. A mismatch here fails at import time, not at
-#    install time, so it looks like everything worked until vllm serve dies.
-uv pip install -U vllm --pre \
-    --extra-index-url https://wheels.vllm.ai/nightly/cu129 \
+# 3. vLLM: PINNED stable release (requirements-vllm.txt). The logged run of
+#    9 Aug 2026 used an unpinned nightly whose version was not recorded; do
+#    not use nightlies for new runs. cu129 assumes CUDA 12.9 -- swap for the
+#    instance's CUDA (see step 2) if different.
+uv pip install -r "$(dirname "$0")/requirements-vllm.txt" \
     --extra-index-url https://download.pytorch.org/whl/cu129 \
     --index-strategy unsafe-best-match
+# Record the server environment next to the run (goes into the paper's
+# reproducibility appendix together with the vllm serve flags below).
+mkdir -p "$(dirname "$0")/runs"
+{ date -u; nvidia-smi; python3 -c "import vllm, torch, transformers; print('vllm', vllm.__version__, 'torch', torch.__version__, 'transformers', transformers.__version__)"; pip freeze; } \
+    > "$(dirname "$0")/runs/vllm_server_env.txt" 2>&1 || true
 
 # 4. Sanity check: transformers must actually be new enough to know gemma4.
 python3 -c "

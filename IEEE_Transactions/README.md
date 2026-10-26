@@ -1,11 +1,18 @@
 # CATSEC -- IEEE Transactions experiments
 
-    code/          kernel.py, planner.py, run_catsec_openai.py (copied UNCHANGED
-                   from ../Journal_Experiments/GPT -- never edit them here)
+    (code)         the experiments import the shared ../catsec package (kernel,
+                   contracts, composer prompt); the former code/ copy is gone
     data/logs/     logged runs, one folder per model (read-only inputs)
     experiments/   one folder per experiment (E1, E2, ...)
     results/       outputs, mirroring experiments/
     paper/         the IEEE Transactions manuscript
+
+All of E1-E6, the figures and the paper-number assertions run in one go
+from the repository root with `make offline-repro` (or `./reproduce.sh`),
+which also compares every output with the committed results.
+
+## Paper numbers
+    python paper/verify_claims.py      # asserts 122 numbers of the paper; exit 0 = all match
 
 ## E1 -- adaptive designated-file attack (offline, no API, no GPU)
     source .venv/bin/activate
@@ -19,7 +26,7 @@ Run `faithful` first. It must print 144/144 before the adaptive numbers are trus
 Tests six settings (none, amount_critical, confirm_derived, both, refuse_failed,
 confirm_refuse) against
 the E1 adaptive attacks (Part A) and the original 144 pairs (Part B). Needs E1's
-script in place; code/ is never edited. The SANITY line must say PASS.
+script in place; catsec/ is never edited. The SANITY line must say PASS.
 refuse_failed uses experiments/E2_mitigations/strict_interpreter.py, a verified
 copy of kernel.Interpreter.run plus one marked rule (it self-checks on import).
 
