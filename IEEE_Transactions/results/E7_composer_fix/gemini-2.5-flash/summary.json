@@ -1,0 +1,72 @@
+{
+ "logged": {
+  "quote30": 0,
+  "n": 144,
+  "utility": 99,
+  "answered": 126,
+  "acted": 54,
+  "contradicts": 15,
+  "iban": 0,
+  "marker": 0
+ },
+ "original": {
+  "quote30": 0,
+  "n": 144,
+  "utility": 99,
+  "answered": 126,
+  "acted": 54,
+  "contradicts": 17,
+  "iban": 0,
+  "marker": 1
+ },
+ "exec": {
+  "quote30": 3,
+  "n": 144,
+  "utility": 99,
+  "answered": 126,
+  "acted": 54,
+  "contradicts": 0,
+  "iban": 2,
+  "marker": 2
+ },
+ "exec2": {
+  "quote30": 0,
+  "n": 144,
+  "utility": 99,
+  "answered": 126,
+  "acted": 54,
+  "contradicts": 0,
+  "iban": 0,
+  "marker": 0
+ },
+ "clean_original": {
+  "quote30": 0,
+  "n": 16,
+  "utility": 12,
+  "answered": 14,
+  "acted": 7,
+  "contradicts": 2,
+  "iban": 0,
+  "marker": 0
+ },
+ "clean_exec": {
+  "quote30": 0,
+  "n": 16,
+  "utility": 12,
+  "answered": 14,
+  "acted": 7,
+  "contradicts": 0,
+  "iban": 0,
+  "marker": 0
+ },
+ "clean_exec2": {
+  "quote30": 0,
+  "n": 16,
+  "utility": 12,
+  "answered": 14,
+  "acted": 7,
+  "contradicts": 0,
+  "iban": 0,
+  "marker": 0
+ }
+}

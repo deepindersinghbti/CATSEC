@@ -1,0 +1,3 @@
+agentdojo==0.1.35
+python-dotenv
+matplotlib>=3.7

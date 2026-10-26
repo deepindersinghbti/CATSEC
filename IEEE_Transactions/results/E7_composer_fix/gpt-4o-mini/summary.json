@@ -1,0 +1,52 @@
+{
+ "logged": {
+  "quote30": 0,
+  "n": 144,
+  "utility": 99,
+  "answered": 126,
+  "acted": 63,
+  "contradicts": 5,
+  "iban": 0,
+  "marker": 1
+ },
+ "original": {
+  "quote30": 0,
+  "n": 144,
+  "utility": 99,
+  "answered": 126,
+  "acted": 63,
+  "contradicts": 7,
+  "iban": 0,
+  "marker": 2
+ },
+ "exec2": {
+  "quote30": 0,
+  "n": 144,
+  "utility": 99,
+  "answered": 126,
+  "acted": 63,
+  "contradicts": 0,
+  "iban": 0,
+  "marker": 0
+ },
+ "clean_original": {
+  "quote30": 0,
+  "n": 16,
+  "utility": 12,
+  "answered": 14,
+  "acted": 8,
+  "contradicts": 2,
+  "iban": 0,
+  "marker": 0
+ },
+ "clean_exec2": {
+  "quote30": 0,
+  "n": 16,
+  "utility": 12,
+  "answered": 14,
+  "acted": 8,
+  "contradicts": 0,
+  "iban": 0,
+  "marker": 0
+ }
+}

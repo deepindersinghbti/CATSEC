@@ -1,0 +1,33 @@
+# ── CATSEC Gemma 4 leg — Python deps for the Jarvis Labs instance ──
+#
+# Launch the Jarvis Labs "PyTorch" TEMPLATE (not a bare VM) — it ships CUDA,
+# cuDNN and a matching PyTorch build already installed, so torch is
+# deliberately NOT listed here. Installing a generic torch wheel on top of
+# the template risks a CUDA/driver mismatch.
+#
+# IMPORTANT: `pip install -r requirements.txt` alone does NOT give you a
+# working vLLM + Gemma 4 setup. As of now, stable vLLM on PyPI still pins
+# transformers<5, but Gemma 4's model_type ("gemma4") is only recognized by
+# transformers>=5.5.0 — pip's resolver either conflicts outright, or installs
+# "successfully" and then fails at model-load time with:
+#   "The checkpoint you are trying to load has model type `gemma4` but
+#    Transformers does not recognize this architecture."
+# (tracked upstream: vllm-project/vllm#38868, #39216 — still open)
+#
+# vLLM + transformers are therefore installed SEPARATELY, after this file,
+# via install_vllm_gemma4.sh (nightly wheel). Everything below is safe to
+# install normally.
+
+openai>=1.50
+python-dotenv>=1.0
+pydantic>=2.6
+pandas>=2.2
+scipy>=1.12
+huggingface_hub>=0.25
+pillow>=10.3          # Gemma 4 is a multimodal (vision+audio+text) checkpoint;
+                       # its processor imports PIL even for text-only serving.
+
+# Pinned to match the OpenAI/Gemini/Claude legs' environment, so task
+# definitions (user_task/injection_task IDs, suite content) stay identical
+# across the whole study.
+agentdojo==0.1.35
