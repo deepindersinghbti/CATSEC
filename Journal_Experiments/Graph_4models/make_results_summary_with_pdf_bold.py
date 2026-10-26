@@ -112,7 +112,7 @@ def summarise(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--logdir", default="/home/deepinder/Category-Theory/Journal_Experiments/Graph_4models",
+    ap.add_argument("--logdir", default=os.path.dirname(os.path.abspath(__file__)),
                     help="directory holding the four per-trial JSONL files")
     ap.add_argument("--out", default="results_summary.png",
                     help="high-DPI raster output path")

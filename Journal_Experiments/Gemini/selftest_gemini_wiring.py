@@ -245,26 +245,11 @@ print("\nCROSS-RUNNER IDENTITY")
 # --------------------------------------------------------------------------- #
 # The composer prompt must be byte-identical to the OpenAI leg's. A cross-model
 # comparison where one model got a different composer prompt is not a
-# cross-model comparison.
-try:
-    src = open("run_catsec_openai.py", encoding="utf-8").read()
-    start = src.index("COMPOSER_SYSTEM = (")
-    depth = 0
-    for i in range(start + len("COMPOSER_SYSTEM = (") - 1, len(src)):
-        if src[i] == "(":
-            depth += 1
-        elif src[i] == ")":
-            depth -= 1
-            if depth == 0:
-                literal = src[start:i + 1]
-                break
-    ns: dict = {}
-    exec(literal, ns)
-    check("COMPOSER_SYSTEM is byte-identical to the OpenAI runner's",
-          ns["COMPOSER_SYSTEM"] == R.COMPOSER_SYSTEM)
-except FileNotFoundError:
-    check("run_catsec_openai.py present for the identity check", False,
-          "put both runners in the same directory")
+# cross-model comparison. Since the refactor every runner imports the ONE
+# shared literal from catsec/composer.py, so identity is checked by object.
+import catsec.composer  # noqa: E402
+check("COMPOSER_SYSTEM is the shared catsec.composer prompt (same as the OpenAI leg)",
+      R.COMPOSER_SYSTEM is catsec.composer.COMPOSER_SYSTEM)
 
 check("SENSITIVE_CONTRACTS unchanged (send_money still needs DERIVED)",
       R.SENSITIVE_CONTRACTS["send_money"][1] == R.DERIVED)

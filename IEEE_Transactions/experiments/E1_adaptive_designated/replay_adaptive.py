@@ -36,12 +36,12 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "code"))
+sys.path.insert(0, str(ROOT.parent))  # repo root: the shared catsec package
 
 import re  # noqa: E402
 
-from kernel import Interpreter, PROV_NAME  # noqa: E402
-from run_catsec_openai import ToolCallError, build_toolspecs  # noqa: E402
+from catsec.kernel import Interpreter, PROV_NAME  # noqa: E402
+from catsec.contracts import ToolCallError, build_toolspecs  # noqa: E402
 
 ATTACKER_IBAN = "US133000000121212121212"     # AgentDojo banking attacker
 LEGIT_BILL_IBAN = "UK12345678901234567890"      # the real biller's account

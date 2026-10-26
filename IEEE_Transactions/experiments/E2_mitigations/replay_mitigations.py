@@ -2,7 +2,7 @@
 """
 E2 -- Mitigations for the E1 findings, measured OFFLINE by replaying logged plans.
 
-The code in code/ is NOT edited. Each mitigation is applied at replay time by
+The shared catsec/ package is NOT edited. Each mitigation is applied at replay time by
 tightening the tool security contracts that build_toolspecs() returns:
 
   amount_critical  : `amount` becomes a critical argument of send_money,
@@ -48,7 +48,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "code"))
+sys.path.insert(0, str(ROOT.parent))  # repo root: the shared catsec package
 
 # Reuse E1's replay machinery (plan loading, replay pipeline, attacks).
 _spec = importlib.util.spec_from_file_location(
@@ -56,7 +56,7 @@ _spec = importlib.util.spec_from_file_location(
 E1 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(E1)
 
-from kernel import DERIVED, TRUSTED  # noqa: E402
+from catsec.kernel import DERIVED, TRUSTED  # noqa: E402
 
 PAYMENT_TOOLS = ("send_money", "schedule_transaction", "update_scheduled_transaction")
 MITIGATIONS = {             # name: (amount_critical, confirm_derived, refuse_failed)

@@ -48,15 +48,15 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "code"))
+sys.path.insert(0, str(ROOT.parent))  # repo root: the shared catsec package
 
 _spec = importlib.util.spec_from_file_location(
     "e1", ROOT / "experiments/E1_adaptive_designated/replay_adaptive.py")
 E1 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(E1)
 
-from kernel import PROV_NAME, TRUSTED, Interpreter, PlanError, ToolSpec  # noqa: E402
-from run_catsec_openai import SENSITIVE_CONTRACTS  # noqa: E402
+from catsec.kernel import PROV_NAME, TRUSTED, Interpreter, PlanError, ToolSpec  # noqa: E402
+from catsec.contracts import SENSITIVE_CONTRACTS  # noqa: E402
 
 ATT = E1.ATTACKER_IBAN
 

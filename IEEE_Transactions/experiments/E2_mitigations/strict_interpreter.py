@@ -1,6 +1,6 @@
 """
 StrictInterpreter -- kernel.Interpreter plus ONE rule, used by E2's
-`refuse_failed` settings. code/kernel.py is not edited.
+`refuse_failed` settings. catsec/kernel.py is not edited.
 
 THE RULE
   A sensitive tool call is refused if ANY argument the plan provides holds a
@@ -15,14 +15,14 @@ HOW TO AUDIT THIS FILE
   run() below is a verbatim copy of kernel.Interpreter.run with one block
   inserted, marked STRICT RULE. `_verify_copy()` strips that block and checks
   the remainder is byte-identical to the kernel's current run(), so this file
-  cannot silently drift from code/kernel.py.
+  cannot silently drift from catsec/kernel.py.
 """
 from __future__ import annotations
 
 import inspect
 
-import kernel
-from kernel import (DERIVED, PROV_NAME, TRUSTED, UNTRUSTED, ExecResult,  # noqa: F401
+from catsec import kernel
+from catsec.kernel import (DERIVED, PROV_NAME, TRUSTED, UNTRUSTED, ExecResult,  # noqa: F401
                     Interpreter, PVal, extract_field, extract_field_matched,
                     join, validate_plan)
 
@@ -184,7 +184,7 @@ def _verify_copy():
         "                    # <<< STRICT RULE <<<\n")
     stripped = mine[:start] + mine[end:]
     if stripped != inspect.getsource(kernel.Interpreter.run):
-        raise RuntimeError("strict_interpreter.py no longer matches code/kernel.py "
+        raise RuntimeError("strict_interpreter.py no longer matches catsec/kernel.py "
                            "-- regenerate it before trusting refuse_failed results")
 
 

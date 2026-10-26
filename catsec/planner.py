@@ -40,7 +40,7 @@ import json
 import re
 from typing import Any, Callable
 
-from kernel import validate_plan, PlanError
+from .kernel import validate_plan, PlanError
 
 
 class PlannerError(Exception):

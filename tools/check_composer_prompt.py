@@ -2,12 +2,18 @@
 """
 Offline guard for the answer-composer's system prompt.
 
-Usage:  python check_composer_prompt.py [runner.py]
-With no argument it auto-detects the single run_catsec_*.py in the current
-directory, and refuses to guess when more than one is present.
+Usage:  python tools/check_composer_prompt.py [source.py]
+
+With no argument it checks the ONE shared composer prompt,
+catsec/composer.py, from any working directory, and additionally checks that
+no per-model runner under Journal_Experiments/ re-defines its own
+COMPOSER_SYSTEM (every runner must import the shared one). Before the
+refactor each model folder had its own copy of this script and of the
+prompt; the Gemma copy failed by default ("run_catsec_openai.py not found")
+and the Gemini copy silently checked a stray OpenAI runner.
 
 Runs with NO API key, NO network, and WITHOUT importing the runner -- it reads
-the runner as TEXT, so it works even where openai/agentdojo are not
+the source as TEXT, so it works even where openai/agentdojo are not
 installed. It is the mechanical enforcement of one promise:
 
     state a GENERAL principle, or do not state it at all.
@@ -17,36 +23,16 @@ figures, dates, merchants or expected answer, it is not a fix -- it is tuning
 against the test set, and a reviewer is entitled to reject the resulting
 utility number. This script fails loudly the moment that line is crossed, so
 the overfitting risk is caught in CI rather than in review.
-
-Run:  python check_composer_prompt.py
 """
 from __future__ import annotations
 
 import re
 import sys
+from pathlib import Path
 
-# WHICH RUNNER TO GUARD. Every provider leg carries its OWN copy of the
-# COMPOSER_SYSTEM literal, so this guard must be pointed at the runner
-# actually being run. Hardcoding one filename meant the guard silently
-# exited 1 ("file not found") in every other leg's directory -- a guard that
-# reports "not found" instead of "not checked" is a guard you stop reading.
-# Defaults to whichever sibling runners are present, newest-provider-first;
-# override with `python check_composer_prompt.py run_catsec_claude.py`.
-import os
-
-_CANDIDATES = ["run_catsec_claude.py", "run_catsec_openai.py",
-               "run_catsec_gemini_vertex.py", "run_catsec_llama_vertex.py"]
-
-if len(sys.argv) > 1:
-    SOURCE = sys.argv[1]
-else:
-    present = [f for f in _CANDIDATES if os.path.exists(f)]
-    if len(present) > 1:
-        print(f"FAIL: several runners present ({', '.join(present)}) -- name "
-              f"the one to check explicitly, e.g.\n"
-              f"    python check_composer_prompt.py {present[0]}")
-        sys.exit(1)
-    SOURCE = present[0] if present else _CANDIDATES[0]
+REPO = Path(__file__).resolve().parents[1]
+SOURCE = Path(sys.argv[1]) if len(sys.argv) > 1 else REPO / "catsec" / "composer.py"
+RUNNERS = sorted((REPO / "Journal_Experiments").glob("*/run_catsec_*.py"))
 
 MARKER = "COMPOSER_SYSTEM = ("
 
@@ -103,12 +89,19 @@ def extract_prompt(text: str) -> str:
 try:
     src = open(SOURCE, encoding="utf-8").read()
 except FileNotFoundError:
-    print(f"FAIL: {SOURCE} not found -- run this from the project directory")
+    print(f"FAIL: {SOURCE} not found")
     sys.exit(1)
 
 check(f"{SOURCE} defines {MARKER.strip(' =(')}", MARKER in src)
 if MARKER not in src:
     sys.exit(1)
+
+# Every runner must use the shared prompt, not a private copy.
+if len(sys.argv) == 1:
+    for r in RUNNERS:
+        txt = r.read_text(encoding="utf-8")
+        check(f"{r.relative_to(REPO)} imports the shared COMPOSER_SYSTEM",
+              MARKER not in txt and "from catsec.composer import COMPOSER_SYSTEM" in txt)
 
 prompt = extract_prompt(src)
 prompt_l = prompt.lower()

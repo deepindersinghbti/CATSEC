@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 """
-Offline self-test for kernel.py + planner.py.
+Offline self-test for catsec/kernel.py + catsec/planner.py.
 
 Runs with NO API key, NO network and NO agentdojo installed. It uses a stub
 "model" that returns canned plan JSON, so you can verify the plan parser, the
 schema validation, the provenance lattice and the refusal policy in about a
 second -- before spending anything on a real run.
 
-Run:  python selftest.py
+Run:  python tests/selftest.py
 """
 from __future__ import annotations
-from planner import plan_risk_message_fabricated_literal
-from planner import plan_risk_message_vague_delegation
-from planner import plan_risk_message
 
 import json
 import sys
+from pathlib import Path
 
-from kernel import (ToolSpec, Interpreter, TRUSTED, DERIVED, UNTRUSTED,
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root
+
+from catsec.planner import plan_risk_message_fabricated_literal  # noqa: E402
+from catsec.planner import plan_risk_message_vague_delegation  # noqa: E402
+from catsec.planner import plan_risk_message  # noqa: E402
+from catsec.kernel import (ToolSpec, Interpreter, TRUSTED, DERIVED, UNTRUSTED,
                     PROV_NAME, validate_plan, PlanError, extract_field)
-from planner import build_plan, parse_plan, PlannerError, assert_no_tool_output
+from catsec.planner import build_plan, parse_plan, PlannerError, assert_no_tool_output
 
 PASS, FAIL = "  PASS", "  FAIL"
 results = []

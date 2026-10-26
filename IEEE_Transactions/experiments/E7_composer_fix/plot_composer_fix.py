@@ -85,6 +85,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="print the numbers, draw nothing")
     ap.add_argument("--dpi", type=int, default=600)
+    ap.add_argument("--out-dir", default=str(OUT_DIR),
+                    help="where to write the .pdf/.png (default: paper/figs)")
     args = ap.parse_args()
 
     data = {m: load(m) for m, _ in MODELS}
@@ -146,8 +148,9 @@ def main():
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="outside upper center", ncol=2, frameon=False)
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    pdf, png = OUT_DIR / f"{STEM}.pdf", OUT_DIR / f"{STEM}.png"
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pdf, png = out_dir / f"{STEM}.pdf", out_dir / f"{STEM}.png"
     fig.savefig(pdf)
     fig.savefig(png, dpi=args.dpi)
     print(f"\nwrote {pdf}\nwrote {png} ({args.dpi} DPI)")
