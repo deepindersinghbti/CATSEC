@@ -80,6 +80,10 @@ from catsec.harness import (  # noqa: E402,F401
     TrialProbe, tool_sequence_from_messages, make_trace_recorder, trial_key,
     load_resume_index, JsonlWriter, _single_value,
 )
+from catsec.options import (  # noqa: E402
+    CatsecOptions, add_cli_args, from_args as catsec_options_from_args,
+    manifest_info,
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -283,7 +287,10 @@ class MeteredClient:
 def make_catsec_pipeline(client, model_name: str, decode: DecodeConfig,
                          policy: str = "refuse", verbose: bool = False,
                          ablation: str = "none", allow_repair: bool = False,
-                         probe: TrialProbe | None = None):
+                         probe: TrialProbe | None = None,
+                         opts: CatsecOptions | None = None):
+    # Revision options (catsec/options.py); the defaults reproduce the logs.
+    opts = opts if opts is not None else CatsecOptions()
     from agentdojo.agent_pipeline import BasePipelineElement
     from agentdojo.functions_runtime import EmptyEnv, FunctionCall
     from agentdojo.types import text_content_block_from_string
@@ -389,7 +396,8 @@ def make_catsec_pipeline(client, model_name: str, decode: DecodeConfig,
                 return query, runtime, env, msgs, extra_args
 
             specs, tool_failures = build_toolspecs(
-                runtime, env, ablation=ablation)
+                runtime, env, ablation=ablation,
+                unknown_tool_policy=opts.unknown_tool_policy)
             tdesc = tool_descriptions(runtime)
 
             try:
@@ -398,7 +406,8 @@ def make_catsec_pipeline(client, model_name: str, decode: DecodeConfig,
                     plan = cached
                 else:
                     plan = build_plan(self._plan_llm, query, tdesc, specs,
-                                      allow_repair=allow_repair)
+                                      allow_repair=allow_repair,
+                                      **opts.planner_kwargs())
                     self._plan_cache[query] = plan
                 self.plans_ok += 1
                 p.plan, p.plan_valid, p.plan_error = plan, True, None
@@ -565,7 +574,8 @@ def build_pipeline_factory(args, model_id: str, client, probe: TrialProbe,
 
     CatsecCls = make_catsec_pipeline(
         client, model_id, decode, args.policy, args.verbose_interp,
-        ablation=args.ablation, allow_repair=args.plan_repair, probe=probe)
+        ablation=args.ablation, allow_repair=args.plan_repair, probe=probe,
+        opts=args.catsec_opts)
     RecorderCls = make_trace_recorder(probe)
 
     def build(defense_name):
@@ -728,12 +738,27 @@ def parse_args():
     p.add_argument("--trial-timeout", type=float, default=120.0,
                    help="Per-pair time budget in seconds (0 = unlimited).")
     p.add_argument("--verbose-interp", action="store_true")
-    return p.parse_args()
+    p.add_argument("--base-url", default=os.environ.get("OPENAI_BASE_URL"),
+                   help="OpenAI-COMPATIBLE endpoint for local/open models, e.g. "
+                        "http://localhost:11434/v1 (Ollama) or "
+                        "http://localhost:8000/v1 (vLLM). No paid API is used and "
+                        "no OPENAI_API_KEY is needed when this is set. "
+                        "See docs/local_models.md for what fits which GPU.")
+    add_cli_args(p)
+    args = p.parse_args()
+    args.catsec_opts = catsec_options_from_args(args)
+    return args
 
 
 def main():
     args = parse_args()
-    ensure_openai_env()
+    if args.base_url:
+        # Local OpenAI-compatible server: no paid API, no key required.
+        load_dotenv()
+        os.environ.setdefault("OPENAI_API_KEY", "local-no-key")
+        print(f"[OpenAI-compatible] endpoint {args.base_url}")
+    else:
+        ensure_openai_env()
 
     import logging
     for n in ["agentdojo", "httpx", "httpcore", "openai", "urllib3"]:
@@ -751,10 +776,12 @@ def main():
     )
     meter = UsageMeter()
     probe = TrialProbe()
+    probe.run_settings = manifest_info(args.catsec_opts)
     limiter = RateLimiter(base_interval=args.min_call_interval,
                           max_interval=args.max_call_interval)
 
-    raw_client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    raw_client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),
+                               base_url=args.base_url or None)
     client = MeteredClient(raw_client, meter, limiter)
 
     logdir = Path(args.logdir).resolve()
@@ -770,6 +797,14 @@ def main():
             raise SystemExit(
                 f"--user-tasks: unknown task id(s): {sorted(missing)}")
         ut_ids = [u for u in ut_ids if u in wanted]
+    allowed = args.catsec_opts.allowed_user_tasks()
+    if allowed is not None:
+        # kfold protocol: fold f's prompt may only be evaluated on fold f.
+        outside = sorted(set(ut_ids) - set(allowed)) if args.user_tasks else []
+        if outside:
+            raise SystemExit(f"--prompt-variant kfold --fold {args.fold}: "
+                             f"tasks {outside} are not in the test fold")
+        ut_ids = [u for u in ut_ids if u in allowed]
     it_ids = list(suite.injection_tasks.keys())
     run_id = _dt.datetime.now(_dt.timezone.utc).strftime(
         "%Y-%m-%dT%H%M%SZ-") + uuid.uuid4().hex[:4]
@@ -802,7 +837,9 @@ def main():
         base.parent.mkdir(parents=True, exist_ok=True)
         jsonl_path = base
         write_manifest(base.with_suffix(".manifest.json"), args, decode, run_id,
-                       {"n_user_tasks": len(ut_ids), "n_injection_tasks": len(it_ids)})
+                       {**manifest_info(args.catsec_opts),
+                        "base_url": args.base_url,
+                        "n_user_tasks": len(ut_ids), "n_injection_tasks": len(it_ids)})
     writer = JsonlWriter(jsonl_path)
     done = load_resume_index(jsonl_path) if (
         args.resume and jsonl_path) else set()
@@ -980,7 +1017,7 @@ def main():
           f"{ls['seconds_spent_pacing']}s spent pacing")
     if jsonl_path:
         print(f"Per-trial log: {jsonl_path}")
-        print(f"Next: python analyze.py --jsonl '{jsonl_path}'")
+        print(f"Next: python ../../analysis/analyze.py --jsonl '{jsonl_path}'")
 
 
 if __name__ == "__main__":

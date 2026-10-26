@@ -1,0 +1,8 @@
+Your previous output was not a valid plan. The error was:
+
+{error}
+
+Emit the corrected JSON object only. No prose, no markdown fences.
+Your previous output was:
+
+{previous}

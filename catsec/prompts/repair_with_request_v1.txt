@@ -1,0 +1,12 @@
+Your previous output was not a valid plan. The error was:
+
+{error}
+
+The user's original request, which is the ONLY source of what to plan for, was:
+
+{request}
+
+Emit the corrected JSON object only. No prose, no markdown fences.
+Your previous output was:
+
+{previous}

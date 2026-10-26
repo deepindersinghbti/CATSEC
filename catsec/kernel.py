@@ -281,6 +281,93 @@ def extract_field_matched(text: str, field: str, match: str):
     return extract_field(record, field.upper())
 
 
+# --------------------------------------------------------------------------- #
+# AMOUNT parsing with thousands separators and decimal commas
+# --------------------------------------------------------------------------- #
+# BUG FIXED (revision 2026-10): the legacy AMOUNT pattern above stops at the
+# first non-digit, so "Total: 1,200.00" was read as '1' and "Total: 98,70 EUR"
+# as '98' -- a silently WRONG value, not the bottom (None) the paper promises
+# for absent/ambiguous fields. Because `amount` is not a critical argument of
+# send_money, such a value can reach the tool ungated.
+#
+# "strict" (the default) takes the whole numeric token and normalises it:
+#     98.70 -> '98.70'      1,200.00 -> '1200.00'     1.200,00 -> '1200.00'
+#     98,70 -> '98.70'      1'200.50 -> '1200.50'     1 200,00 (NBSP) -> '1200.00'
+#     1,200,000 -> '1200000'
+# and returns None (fail closed) for a token whose reading depends on the
+# locale: one separator followed by exactly three digits ("1,200", "1.200":
+# 1200 in one convention, 1.2 in the other), malformed grouping ("1,20,0"),
+# or a decimal part of 3+ digits. A token with no separator is returned
+# exactly as written, so every value the legacy parser read correctly is
+# byte-identical (the committed replays depend on that).
+# It also accepts an optional currency sign/code between label and number
+# ("Total: $98.70", "Amount: EUR 98,70") and the label "Amount due".
+#
+# "legacy" restores the released behaviour exactly, for auditing old runs.
+AMOUNT_PARSER = "strict"          # "strict" | "legacy"
+
+_AMOUNT_STRICT = re.compile(
+    r"(?:Total|Amount(?:\s+due)?|increased by|decreased by|by)[:\s]+"
+    r"(?:[$€£]|USD|EUR|GBP|CHF)?\s*"
+    r"([0-9][0-9.,'  ]*[0-9]|[0-9])",
+    re.IGNORECASE)
+_GROUP_SEPS = ",.'  "
+
+
+def normalize_amount(token: str):
+    """Canonical decimal string for one numeric token, or None if its reading
+    is locale-ambiguous or malformed. See the comment block above."""
+    if token is None:
+        return None
+    token = token.strip()
+    if not token or not token[0].isdigit() or not token[-1].isdigit():
+        return None
+    if token.isdigit():
+        return token
+    seps = [c for c in token if c in _GROUP_SEPS]
+    if any(not (c.isdigit() or c in _GROUP_SEPS) for c in token):
+        return None
+    last = max(token.rfind(c) for c in _GROUP_SEPS)
+    tail = token[last + 1:]
+    head = token[:last]
+    last_sep = token[last]
+    decimal = None
+    if last_sep in ".," and 1 <= len(tail) <= 2:
+        decimal, int_part = tail, head          # e.g. 1,200.00 / 98,70
+    elif len(tail) == 3:
+        if len(seps) == 1:
+            return None                         # "1,200" / "1.200": ambiguous
+        int_part = token                        # 1,200,000 (all grouping)
+    else:
+        return None                             # 3+ decimals, 4+ digit group...
+    # the integer part may only use ONE grouping separator, different from
+    # the decimal separator, with groups of exactly three digits
+    gseps = {c for c in int_part if c in _GROUP_SEPS}
+    if decimal is not None and last_sep in gseps:
+        return None                             # "1.200.00"
+    if len(gseps) > 1:
+        return None
+    if gseps:
+        g = gseps.pop()
+        groups = int_part.split(g)
+        if not (1 <= len(groups[0]) <= 3 and all(len(x) == 3 for x in groups[1:])
+                and all(x.isdigit() for x in groups)):
+            return None
+        int_digits = "".join(groups)
+    else:
+        if not int_part.isdigit():
+            return None
+        int_digits = int_part
+    return int_digits + ("." + decimal if decimal is not None else "")
+
+
+def _amount_hits(text: str):
+    """All AMOUNT candidates in `text`; a None entry marks an unreadable one."""
+    if AMOUNT_PARSER == "legacy":
+        return _EXTRACTORS["AMOUNT"].findall(text)
+    return [normalize_amount(t) for t in _AMOUNT_STRICT.findall(text)]
+
+
 def extract_field(text: str, field: str):
     """Deterministic structured extraction. Returns None if absent or ambiguous.
 
@@ -292,7 +379,12 @@ def extract_field(text: str, field: str):
     rx = _EXTRACTORS.get(field.upper())
     if rx is None or not isinstance(text, str):
         return None
-    hits = rx.findall(text)
+    if field.upper() == "AMOUNT":
+        hits = _amount_hits(text)
+        if any(h is None for h in hits):
+            return None      # a locale-ambiguous / malformed amount -> bottom
+    else:
+        hits = rx.findall(text)
     if not hits:
         return None
     uniq = sorted(set(hits))

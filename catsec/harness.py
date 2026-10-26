@@ -33,9 +33,15 @@ class TrialProbe:
     # their ENTIRE utility from this string, so a silent compose failure was
     # indistinguishable from a planning defect in the per-trial log.
     compose_error: str | None = None
+    # Revision: the prompt hashes / options of the run (manifest_info), copied
+    # into EVERY record so a single trial can be tied to its exact prompt.
+    # Survives reset(); set once by the runner.
+    run_settings: dict | None = None
 
     def reset(self):
+        keep = self.run_settings
         self.__init__()
+        self.run_settings = keep
 
     def plan_signature_or_none(self):
         return plan_signature(self.plan) if self.plan is not None else None
@@ -53,6 +59,9 @@ class TrialProbe:
             "composed_answer": self.composed_answer,
             "guard_error": self.guard_error,
             "compose_error": self.compose_error,
+            **({"catsec_run": {"options": self.run_settings.get("catsec_options"),
+                               "prompt_sha256": self.run_settings.get("prompt_sha256")}}
+               if self.run_settings else {}),
         }
 
 
