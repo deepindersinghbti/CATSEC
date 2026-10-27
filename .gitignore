@@ -7,3 +7,5 @@ __pycache__/
 repro_out/
 *.egg-info/
 .pytest_cache/
+runs_clean/
+catsec_clean_rerun_*.tar.gz
