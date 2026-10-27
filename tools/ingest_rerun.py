@@ -683,6 +683,15 @@ def add_injected_macros(M: Macros, S: str, stats: dict, label: str):
     M.add(f"{S}UndUtilSpread", pct(max(uu) - min(uu)) if uu else None, "pp, max-min over planners")
     M.add(f"{S}CatUtilSpread", pct(max(cu) - min(cu)) if cu else None)
     M.add(f"{S}CatTasksSpread", (max(ts) - min(ts)) if ts else None)
+    for aa, vals in (("Und", uu), ("Cat", cu)):
+        M.add(f"{S}Util{aa}Min", pct(min(vals)) if vals else None, "range over planners")
+        M.add(f"{S}Util{aa}Max", pct(max(vals)) if vals else None)
+    for a, aa in ARMS.items():
+        for met in ("Util", "Sec"):
+            v = [stats[m]["arms"][a].get(f"rep_stable_{met.lower()}") for m in present]
+            v = [x for x in v if x is not None]
+            M.add(f"{S}RepStable{met}{aa}Min", pct(min(v)) if v else None,
+                  "min over planners of % pairs identical in every repetition")
     for f, k in (("Calls", "n_model_calls"), ("TokIn", "tokens_in"), ("TokOut", "tokens_out"),
                  ("Lat", "latency_s")):
         v = [stats[m]["reduction"][k] for m in present if stats[m]["reduction"][k] is not None]
