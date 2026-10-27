@@ -100,6 +100,6 @@ for f in 0 1 2 3; do python run_catsec_openai.py --profile clean \
 
 | co-author | date | signature |
 |---|---|---|
-| Abdul Manan Khan | 2026-10-26 | proposed |
+| Abdul Manan Khan | 2026-10-27 | approved (incl. API budget ≈$12, cap $25) |
 | Deepinder Singh | | |
 | Vishwanath Bijalwan | | |
